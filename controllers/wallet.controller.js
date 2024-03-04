@@ -1,4 +1,4 @@
-const { GetWalletBalance, CreateWallet,WalletDetails ,ListWallet} = require("../services/wallet");
+const { GetWalletBalance, CreateWallet,WalletDetails ,ListWallet, SendBitcoin} = require("../services/wallet");
 
 module.exports = {
   getWalletBalance: async (req, res) => {
@@ -45,6 +45,19 @@ module.exports = {
       res.status(201).json({data:data.data});
     } catch (error) {
       res.status(400).json(error.response.data);
+    }
+  },
+  sendBitcoin: async (req, res) => {
+    try {
+      const data = await SendBitcoin(
+        req.body.fromaddress,
+        req.body.toAddress,
+        req.body.amount
+      );
+      res.status(201).json({data:data.data});
+    } catch (error) {
+      console.log(error.response.data);
+      res.status(400).json({data:error.response.data.errors});
     }
   },
 };

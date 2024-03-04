@@ -1,5 +1,34 @@
 const axios = require("axios");
 const userDao=require("../dao/user.dao");
+const bitcoin = require('bitcoinjs-lib'); 
+
+async function signTransaction(txSkeleton, privateKey) {
+  const network = bitcoin.networks.testnet; // Use bitcoin.networks.testnet for testnet
+  const keyPair = bitcoin.ECPair.fromWIF(privateKey, network);
+
+  const txb = new bitcoin.TransactionBuilder(network);
+  txb.setVersion(1); 
+
+  txSkeleton.inputs.forEach(input => {
+    txb.addInput(input.prev_hash, input.output_index);
+  });
+  txSkeleton.outputs.forEach(output => {
+    txb.addOutput(output.addresses[0], output.value);
+  });
+
+  txSkeleton.inputs.forEach((input, i) => {
+    txb.sign({
+      prevOutScriptType: 'p2pkh',
+      vin: i,
+      keyPair: keyPair,
+    });
+  });
+
+  const tx = txb.build();
+  const txHex = tx.toHex();
+
+  return { tx: txHex, tosign: txSkeleton.tosign };
+}
 
 module.exports = {
   GetWalletBalance: async (name) => {
@@ -62,16 +91,16 @@ module.exports = {
 
 
     SendBitcoin:async(fromaddress,toAddress,amount)=>{
-      // use axios
 
       const newTx = {
-        inputs: [{ addresses: [fromAddress] }],
-        outputs: [{ addresses: [toAddress], value: amount }]
+        inputs: [{ addresses: [fromaddress] }],
+        outputs: [{ addresses: [toAddress], value: parseFloat(amount) }]
       };
       let url=`${process.env.BTC_API}/${process.env.BTC}/txs/new?token=${process.env.API_TOKEN}`
-      const signedTx = signTransaction(txSkeleton.data, privateKey); 
-
       const txSkeleton = await axios.post(url, newTx);
+      const signedTx = await signTransaction(txSkeleton.data, privateKey); 
+
+      
       const finalTx = await axios.post(`${process.env.BTC_API}/${process.env.BTC}/txs/send`, signedTx);
       return finalTx;
 
