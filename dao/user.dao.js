@@ -26,9 +26,13 @@ async function getUserByUserId(userid) {
 }
 
 async function updateUserByUserId(userid,data) {
+  console.log("wallet data",data);
     try {
-      const user = await User.updateOne({ userId: userid ,$set:data});
-  
+      const user = await User.updateOne(
+        { userId: userid },
+        { $push: { walletAddress: data.walletAddress } }  
+      );
+      
       return user;
     } catch (err) {
       throw new Error("Error getting user " + err);

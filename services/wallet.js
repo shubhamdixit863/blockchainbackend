@@ -85,7 +85,7 @@ module.exports = {
      if(user){
       return user.walletAddress
      }
-     return "User not found"
+     throw new Error( "User not found")
         
     },
 
@@ -94,7 +94,7 @@ module.exports = {
 
       const newTx = {
         inputs: [{ addresses: [fromaddress] }],
-        outputs: [{ addresses: [toAddress], value: parseFloat(amount) }]
+        outputs: [{ addresses: [toAddress], value: parseFloat(Math.floor(amount)) }]
       };
       let url=`${process.env.BTC_API}/${process.env.BTC}/txs/new?token=${process.env.API_TOKEN}`
       const txSkeleton = await axios.post(url, newTx);

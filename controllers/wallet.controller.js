@@ -48,6 +48,7 @@ module.exports = {
     }
   },
   sendBitcoin: async (req, res) => {
+    console.log("req",req.body)
     try {
       const data = await SendBitcoin(
         req.body.fromaddress,
