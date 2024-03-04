@@ -28,9 +28,8 @@ module.exports = {
    listWallet: async (req, res) => {
      try {
      
-       const wallet = await ListWallet();
- 
-       res.status(200).json(wallet.data);
+       const wallet = await ListWallet(req.params.userId);
+       res.status(200).json({data:wallet});
      } catch (error) {
        console.log(error);
        res.status(400).json(error);
@@ -40,9 +39,10 @@ module.exports = {
     try {
       const data = await CreateWallet(
         req.body.wallet_address,
-        req.body.wallet_name
+        req.body.wallet_name,
+        req.body.userId
       );
-      res.status(201).json(data.data);
+      res.status(201).json({data:data.data});
     } catch (error) {
       res.status(400).json(error.response.data);
     }

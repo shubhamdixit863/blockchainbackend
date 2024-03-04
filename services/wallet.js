@@ -1,4 +1,5 @@
 const axios = require("axios");
+const userDao=require("../dao/user.dao");
 
 module.exports = {
   GetWalletBalance: async (name) => {
@@ -24,11 +25,23 @@ module.exports = {
       return error;
     }
   },
-  CreateWallet: async (walletAddress, name) => {
-    return await axios.post(
-      `${process.env.BTC_API}/${process.env.BTC}/wallets?token=${process.env.API_TOKEN}`,
-      { name: name, addresses: [walletAddress] }
-    );
+  CreateWallet: async (walletAddress, name,userId) => {
+    // check if userId exists
+    let userData=await userDao.getUserByUserId(userId);
+    if(userData){
+      let walleData= await axios.post(
+        `${process.env.BTC_API}/${process.env.BTC}/wallets?token=${process.env.API_TOKEN}`,
+        { name: name, addresses: [walletAddress] }
+      );
+      if(walleData.data){
+        userDao.updateUserByUserId(userId,{walletAddress:[walleData.data]})
+      }
+
+      return walleData
+    }
+
+  return {data:"User doesnt exists"}
+     
   },
 
   WalletDetails:async (name) => {
@@ -38,10 +51,29 @@ module.exports = {
         
     },
 
-    ListWallet:async () => {
-      return await axios.get(
-            `${process.env.BTC_API}/${process.env.BTC}/wallets?token=${process.env.API_TOKEN}`
-          );
+    ListWallet:async (userId) => {
+     let user=await userDao.getUserByUserId(userId);
+     if(user){
+      return user.walletAddress
+     }
+     return "User not found"
         
     },
+
+
+    SendBitcoin:async(fromaddress,toAddress,amount)=>{
+      // use axios
+
+      const newTx = {
+        inputs: [{ addresses: [fromAddress] }],
+        outputs: [{ addresses: [toAddress], value: amount }]
+      };
+      let url=`${process.env.BTC_API}/${process.env.BTC}/txs/new?token=${process.env.API_TOKEN}`
+      const signedTx = signTransaction(txSkeleton.data, privateKey); 
+
+      const txSkeleton = await axios.post(url, newTx);
+      const finalTx = await axios.post(`${process.env.BTC_API}/${process.env.BTC}/txs/send`, signedTx);
+      return finalTx;
+
+    }
 };
